@@ -62,7 +62,9 @@ def permission_denied(request, exception):
 
     context = {
         'title': 'Доступ запрещен (403)',
-        'login_url': '/auth/login/' if not request.user.is_authenticated else None,
+        'login_url': (
+            '/auth/login/' if not request.user.is_authenticated else None,
+        ),
     }
 
     return render(request, 'pages/403csrf.html', context, status=403)

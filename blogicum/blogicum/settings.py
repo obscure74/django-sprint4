@@ -62,16 +62,20 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.'
+                'NumericPasswordValidator',
     },
 ]
 
@@ -110,19 +114,3 @@ EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = BASE_DIR / 'media'
-
-if DEBUG:
-    # Показываем подробные ошибки в режиме отладки
-    import sys
-    import traceback
-
-    def show_traceback(exctype, value, tb):
-        """Показываем полный traceback при ошибке"""
-        print("\n" + "="*80)
-        print("DEBUG MODE: Full traceback")
-        print("="*80)
-        traceback.print_exception(exctype, value, tb)
-        print("="*80 + "\n")
-        sys.__excepthook__(exctype, value, tb)
-
-    sys.excepthook = show_traceback
