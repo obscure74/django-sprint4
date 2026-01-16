@@ -26,11 +26,11 @@ def index(request):
     ).annotate(
         comment_count=Count('comments')
     ).order_by('-pub_date')
-    
+
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
     return render(request, 'blog/index.html', {'page_obj': page_obj})
 
 
@@ -89,21 +89,19 @@ def edit_post(request, post_id):
 
 
 def post_detail(request, post_id):
-    """
-    Детальная страница публикации.
-    """
+    """Детальная страница публикации."""
     post = get_object_or_404(Post, id=post_id)
-    
+
     # Проверяем доступ к посту
     if not post.is_published or post.pub_date > timezone.now():
         # Если пост не опубликован или отложен
         if request.user != post.author:
             # И пользователь не автор - показываем 404
             raise Http404("Публикация не найдена")
-    
+
     # Комментарии только опубликованные
     comments = post.comments.filter(is_published=True)
-    
+
     # Форма для комментария
     if request.method == 'POST' and request.user.is_authenticated:
         comment_form = CommentForm(request.POST)
@@ -115,7 +113,7 @@ def post_detail(request, post_id):
             return redirect('blog:post_detail', post_id=post_id)
     else:
         comment_form = CommentForm()
-    
+
     context = {
         'post': post,
         'comments': comments,
@@ -140,19 +138,17 @@ def add_comment(request, post_id):
 
 @login_required
 def edit_comment(request, post_id, comment_id):
-    """
-    Редактирование комментария.
-    """
+    """Редактирование комментария."""
     comment = get_object_or_404(
         Comment,
         id=comment_id,
         post_id=post_id
     )
-    
+
     # Проверяем, что пользователь является автором комментария
     if comment.author != request.user:
         return HttpResponseForbidden()
-    
+
     if request.method == 'POST':
         form = CommentForm(request.POST, instance=comment)
         if form.is_valid():
@@ -183,19 +179,17 @@ def delete_post(request, post_id):
 
 @login_required
 def delete_comment(request, post_id, comment_id):
-    """
-    Удаление комментария.
-    """
+    """Удаление комментария."""
     post = get_object_or_404(Post, id=post_id)
     comment = get_object_or_404(
         Comment,
         id=comment_id,
         post_id=post_id
     )
-    
+
     if comment.author != request.user:
         return HttpResponseForbidden()
-    
+
     if request.method == 'POST':
         comment.delete()
         return redirect('blog:post_detail', post_id=post_id)
@@ -210,7 +204,7 @@ def delete_comment(request, post_id, comment_id):
 def profile(request, username):
     """Страница профиля пользователя."""
     profile_user = get_object_or_404(User, username=username)
-    
+
     # Для автора показываем все посты, для других - только опубликованные
     if request.user == profile_user:
         post_list = profile_user.posts.all()
@@ -220,11 +214,11 @@ def profile(request, username):
             category__is_published=True,
             pub_date__lte=timezone.now()
         )
-    
+
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
     context = {
         'profile_user': profile_user,
         'page_obj': page_obj,
@@ -243,5 +237,4 @@ def edit_profile(request):
             return redirect('blog:profile', username=request.user.username)
     else:
         form = UserEditForm(instance=request.user)
-    
     return render(request, 'blog/user.html', {'form': form})

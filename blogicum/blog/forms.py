@@ -6,6 +6,7 @@ from .models import Post, Category, Comment
 
 class UserEditForm(forms.ModelForm):
     """Форма для редактирования профиля пользователя."""
+
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'email')
