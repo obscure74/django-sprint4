@@ -92,79 +92,72 @@ def post_detail(request, post_id):
     """Детальная страница публикации."""
     post = get_object_or_404(Post, id=post_id)
 
-    # Проверяем доступ к посту
-    if not post.is_published or post.pub_date > timezone.now():
-        # Если пост не опубликован или отложен
-        if request.user != post.author:
-            # И пользователь не автор - показываем 404
-            raise Http404("Публикация не найдена")
+    # Проверка доступности поста
+    can_view = (
+        post.is_published and 
+        post.pub_date <= timezone.now() and
+        post.category.is_published
+    )
 
-    # Комментарии только опубликованные
+    if not can_view and request.user != post.author:
+        from django.http import Http404
+        raise Http404
+
+    # Комментарии
     comments = post.comments.filter(is_published=True)
-
-    # Форма для комментария
-    if request.method == 'POST' and request.user.is_authenticated:
-        comment_form = CommentForm(request.POST)
-        if comment_form.is_valid():
-            comment = comment_form.save(commit=False)
-            comment.post = post
-            comment.author = request.user
-            comment.save()
-            return redirect('blog:post_detail', post_id=post_id)
-    else:
-        comment_form = CommentForm()
 
     context = {
         'post': post,
         'comments': comments,
-        'form': comment_form,
     }
+
+    # Форма для комментариев (если пользователь авторизован)
+    if request.user.is_authenticated:
+        if request.method == 'POST':
+            form = CommentForm(request.POST)
+            if form.is_valid():
+                comment = form.save(commit=False)
+                comment.post = post
+                comment.author = request.user
+                comment.save()
+                return redirect('blog:post_detail', post_id=post_id)
+        else:
+            form = CommentForm()
+        context['form'] = form
+
     return render(request, 'blog/detail.html', context)
 
 
 @login_required
 def add_comment(request, post_id):
     """Добавление комментария к публикации."""
-    post = get_object_or_404(Post, id=post_id)
-
-    # Проверяем, доступен ли пост для комментирования
-    if not post.is_published or post.pub_date > timezone.now():
-        if request.user != post.author:
-            raise Http404("Пост не найден")
-
-    if request.method == "POST":
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.post = post
-            comment.author = request.user
-            comment.save()
-
-    return redirect("blog:post_detail", post_id=post_id)
+    return post_detail(request, post_id)
 
 
 @login_required
 def edit_comment(request, post_id, comment_id):
     """Редактирование комментария."""
-    post = get_object_or_404(Post, id=post_id)
-    comment = get_object_or_404(Comment, id=comment_id, post=post)
+    comment = get_object_or_404(
+        Comment, id=comment_id, post_id=post_id,
+        )
 
-    # Проверяем права доступа
     if comment.author != request.user:
+        from django.http import HttpResponseForbidden
         return HttpResponseForbidden()
 
-    if request.method == "POST":
+    if request.method == 'POST':
         form = CommentForm(request.POST, instance=comment)
         if form.is_valid():
             form.save()
-            return redirect("blog:post_detail", post_id=post_id)
+            return redirect('blog:post_detail', post_id=post_id)
     else:
         form = CommentForm(instance=comment)
-        return render(request, "blog/edit_comment.html", {
-            "form": form,
-            "post": post,
-            "comment": comment,
-        })
+
+    return render(request, 'blog/edit_comment.html', {
+        'form': form,
+        'post': comment.post,
+        'comment': comment,
+    })
 
 
 @login_required
@@ -183,25 +176,20 @@ def delete_post(request, post_id):
 @login_required
 def delete_comment(request, post_id, comment_id):
     """Удаление комментария."""
-    post = get_object_or_404(Post, id=post_id)
-    comment = get_object_or_404(
-        Comment,
-        id=comment_id,
-        post_id=post_id
-    )
+    comment = get_object_or_404(Comment, id=comment_id, post_id=post_id)
 
     if comment.author != request.user:
+        from django.http import HttpResponseForbidden
         return HttpResponseForbidden()
 
     if request.method == 'POST':
         comment.delete()
         return redirect('blog:post_detail', post_id=post_id)
-    else:
-        # GET запрос - показываем страницу подтверждения
-        return render(request, 'blog/delete_comment.html', {
-            'comment': comment,
-            'post': post
-        })
+
+    return render(request, 'blog/delete_comment.html', {
+        'post': comment.post,
+        'comment': comment,
+    })
 
 
 def profile(request, username):
