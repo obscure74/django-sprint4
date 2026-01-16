@@ -3,12 +3,12 @@ from django.views.generic import TemplateView
 
 
 class AboutView(TemplateView):
-    """Представление для страницы 'О проекте'."""
+    """Страница 'О проекте'."""
 
     template_name = 'pages/about.html'
 
 
 class RulesView(TemplateView):
-    """Представление для страницы 'Правила'."""
+    """Страница 'Правила'."""
 
     template_name = 'pages/rules.html'

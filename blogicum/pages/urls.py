@@ -1,5 +1,5 @@
+"""URL-маршруты для статичных страниц."""
 from django.urls import path
-
 from . import views
 
 app_name = 'pages'

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -7,7 +8,7 @@ SECRET_KEY = 'django-insecure-g#ouzg_4jiqr$oz--bjzhzi22^r*%&xtmoy#ytt-6(u1cl1m@i
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -16,6 +17,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_bootstrap5',
     'pages.apps.PagesConfig',
     'blog.apps.BlogConfig',
     'users.apps.UsersConfig',
@@ -109,6 +111,10 @@ LOGOUT_REDIRECT_URL = 'blog:index'
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
+
+# Создаем папку для сохранения писем
+if not os.path.exists(EMAIL_FILE_PATH):
+    os.makedirs(EMAIL_FILE_PATH)
 
 
 MEDIA_URL = '/media/'

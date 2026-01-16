@@ -1,36 +1,51 @@
+"""Формы для работы с пользователями."""
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
 
-class CreationForm(UserCreationForm):
-    """
-    Форма регистрации нового пользователя.
+class UserRegistrationForm(forms.ModelForm):
+    """Форма для регистрации пользователя."""
 
-    Наследует от стандартной формы UserCreationForm.
+    password1 = forms.CharField(
+        label='Пароль',
+        widget=forms.PasswordInput,
+        help_text='Введите пароль'
+    )
+    password2 = forms.CharField(
+        label='Подтверждение пароля',
+        widget=forms.PasswordInput,
+        help_text='Повторите пароль'
+    )
 
-    Fields:
-        first_name: Имя
-        last_name: Фамилия
-        username: Имя пользователя
-        email: Email адрес
-        password1: Пароль
-        password2: Подтверждение пароля
-    """
-
-    class Meta(UserCreationForm.Meta):
+    class Meta:
         model = User
         fields = ('first_name', 'last_name', 'username', 'email')
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Делаем email обязательным
-        self.fields['email'].required = True
+    def clean_password2(self):
+        password1 = self.cleaned_data.get("password1")
+        password2 = self.cleaned_data.get("password2")
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError("Пароли не совпадают")
+        return password2
 
     def clean_email(self):
-        """Проверяет уникальность email."""
+        """Проверка уникальности email."""
         email = self.cleaned_data.get('email')
         if User.objects.filter(email=email).exists():
-            raise forms.ValidationError(
-                'Пользователь с таким email уже существует.')
+            raise forms.ValidationError('Этот email уже используется.')
         return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["password1"])
+        if commit:
+            user.save()
+        return user
+
+
+class UserEditForm(forms.ModelForm):
+    """Форма для редактирования профиля пользователя."""
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'username', 'email')

@@ -1,37 +1,29 @@
 """URL-маршруты для приложения blog."""
 from django.urls import path
-
 from . import views
 
 app_name = 'blog'
 
 urlpatterns = [
-    # Главная страница
     path('', views.index, name='index'),
-
-    # Детальная страница поста
     path('posts/<int:post_id>/', views.post_detail, name='post_detail'),
-
-    # Страница категории
     path(
         'category/<slug:category_slug>/',
         views.category_posts,
-        name='category_posts'),
-
-    # Создание поста
-    path('posts/create/', views.create_post, name='post_create'),
-
-    # Редактирование поста
-    path('posts/<int:post_id>/edit/', views.edit_post, name='post_edit'),
-
-    # Удаление поста
-    path('posts/<int:post_id>/delete/', views.delete_post, name='post_delete'),
-
+        name='category_posts'
+    ),
+    
+    # Создание и редактирование постов
+    path('create/', views.create_post, name='create_post'),
+    path('posts/<int:post_id>/edit/', views.edit_post, name='edit_post'),
+    path('posts/<int:post_id>/delete/', views.delete_post, name='delete_post'),
+    
     # Комментарии
     path(
         'posts/<int:post_id>/comment/',
         views.add_comment,
-        name='add_comment'),
+        name='add_comment'
+    ),
     path(
         'posts/<int:post_id>/edit_comment/<int:comment_id>/',
         views.edit_comment,
@@ -42,4 +34,10 @@ urlpatterns = [
         views.delete_comment,
         name='delete_comment'
     ),
+    
+    # Профиль пользователя
+    path('profile/<str:username>/', views.profile, name='profile'),
+    
+    # Дополнительные маршруты для профиля
+    path('profile/edit/', views.edit_profile, name='edit_profile'),
 ]
