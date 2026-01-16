@@ -1,14 +1,14 @@
-from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.shortcuts import get_object_or_404, render, redirect
-from django.utils import timezone
 from django.db.models import Count
 from django.http import HttpResponseForbidden
-from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
-from .models import Category, Post, Comment
-from .forms import PostForm, CommentForm
+from .forms import CommentForm, PostForm
+from .models import Category, Comment, Post
 
 User = get_user_model()
 
