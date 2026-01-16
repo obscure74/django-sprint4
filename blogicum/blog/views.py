@@ -126,41 +126,44 @@ def post_detail(request, post_id):
 def add_comment(request, post_id):
     """Добавление комментария к публикации."""
     post = get_object_or_404(Post, id=post_id)
-    if request.method == 'POST':
+
+    # Проверяем, доступен ли пост для комментирования
+    if not post.is_published or post.pub_date > timezone.now():
+        if request.user != post.author:
+            raise Http404("Пост не найден")
+
+    if request.method == "POST":
         form = CommentForm(request.POST)
         if form.is_valid():
             comment = form.save(commit=False)
             comment.post = post
             comment.author = request.user
             comment.save()
-    return redirect('blog:post_detail', post_id=post_id)
+
+    return redirect("blog:post_detail", post_id=post_id)
 
 
 @login_required
 def edit_comment(request, post_id, comment_id):
     """Редактирование комментария."""
-    comment = get_object_or_404(
-        Comment,
-        id=comment_id,
-        post_id=post_id
-    )
+    post = get_object_or_404(Post, id=post_id)
+    comment = get_object_or_404(Comment, id=comment_id, post=post)
 
-    # Проверяем, что пользователь является автором комментария
+    # Проверяем права доступа
     if comment.author != request.user:
         return HttpResponseForbidden()
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = CommentForm(request.POST, instance=comment)
         if form.is_valid():
             form.save()
-            return redirect('blog:post_detail', post_id=post_id)
+            return redirect("blog:post_detail", post_id=post_id)
     else:
-        # GET запрос - показываем форму для редактирования
         form = CommentForm(instance=comment)
-        return render(request, 'blog/edit_comment.html', {
-            'form': form,
-            'post_id': post_id,
-            'comment_id': comment_id
+        return render(request, "blog/edit_comment.html", {
+            "form": form,
+            "post": post,
+            "comment": comment,
         })
 
 

@@ -1,5 +1,6 @@
 """Формы для работы с публикациями."""
 from django import forms
+from django.utils import timezone
 from django.contrib.auth.models import User
 from .models import Post, Category, Comment
 
@@ -18,28 +19,34 @@ class PostForm(forms.ModelForm):
     class Meta:
         model = Post
         fields = (
-            'title', 'text', 'pub_date',
-            'location', 'category', 'image'
+            "title",
+            "text",
+            "pub_date",
+            "location",
+            "category",
+            "image",
         )
         widgets = {
-            'pub_date': forms.DateTimeInput(
-                attrs={'type': 'datetime-local'}
-            ),
-            'text': forms.Textarea(attrs={'rows': 10}),
-        }
-        help_texts = {
-            'pub_date': (
-                'Если установить дату и время в будущем — '
-                'можно делать отложенные публикации'
+            "pub_date": forms.DateTimeInput(
+                attrs={"type": "datetime-local"}
             ),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Фильтруем только опубликованные категории
-        self.fields['category'].queryset = Category.objects.filter(
+        self.fields["category"].queryset = Category.objects.filter(
             is_published=True
         )
+
+    def clean_pub_date(self):
+        """Валидация даты публикации."""
+        pub_date = self.cleaned_data.get("pub_date")
+        if pub_date and pub_date < timezone.now():
+            raise forms.ValidationError(
+                "Дата публикации не может быть в прошлом."
+            )
+        return pub_date
 
 
 class CommentForm(forms.ModelForm):

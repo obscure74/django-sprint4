@@ -4,7 +4,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-handler403 = 'blogicum.views.csrf_failure'
+handler403 = 'blogicum.views.permission_denied'
 handler404 = 'blogicum.views.page_not_found'
 handler500 = 'blogicum.views.server_error'
 
