@@ -12,12 +12,12 @@ urlpatterns = [
         views.category_posts,
         name='category_posts'  # Изменили с 'category' на 'category_posts'
     ),
-    
+
     # Создание и редактирование постов
     path('create/', views.create_post, name='create_post'),
     path('posts/<int:post_id>/edit/', views.edit_post, name='edit_post'),
     path('posts/<int:post_id>/delete/', views.delete_post, name='delete_post'),
-    
+
     # Комментарии
     path(
         'posts/<int:post_id>/comment/',
@@ -34,7 +34,7 @@ urlpatterns = [
         views.delete_comment,
         name='delete_comment'
     ),
-    
+
     # Профиль пользователя
     path(
         'profile/<str:username>/',

@@ -1,5 +1,6 @@
 """Представления для приложения blog."""
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models import Count
@@ -90,6 +91,7 @@ def create_post(request):
 def edit_post(request, post_id):
     """Редактирование существующей публикации."""
     post = get_object_or_404(Post, id=post_id)
+
     # Проверяем, что пользователь является автором
     if post.author != request.user:
         # Если не автор - перенаправляем на страницу поста
@@ -161,8 +163,8 @@ def add_comment(request, post_id):
 def edit_comment(request, post_id, comment_id):
     """Редактирование комментария."""
     comment = get_object_or_404(
-        Comment, 
-        id=comment_id, 
+        Comment,
+        id=comment_id,
         post_id=post_id,
     )
 
@@ -204,11 +206,7 @@ def delete_post(request, post_id):
 @login_required
 def delete_comment(request, post_id, comment_id):
     """Удаление комментария."""
-    comment = get_object_or_404(
-        Comment, 
-        id=comment_id, 
-        post_id=post_id
-    )
+    comment = get_object_or_404(Comment, id=comment_id, post_id=post_id)
 
     if comment.author != request.user:
         return HttpResponseForbidden()
@@ -223,10 +221,11 @@ def delete_comment(request, post_id, comment_id):
     })
 
 
-def profile_redirect(request, username):
+def profile(request, username):
     """Страница профиля пользователя."""
     profile_user = get_object_or_404(User, username=username)
 
+    # Для автора показываем все посты, для других - только опубликованные
     if request.user == profile_user:
         post_list = profile_user.posts.all()
     else:
@@ -235,9 +234,6 @@ def profile_redirect(request, username):
             category__is_published=True,
             pub_date__lte=timezone.now()
         )
-
-    post_list = post_list.annotate(comment_count=Count('comments'))
-    post_list = post_list.order_by('-pub_date')
 
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
