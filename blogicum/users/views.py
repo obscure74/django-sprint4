@@ -1,13 +1,13 @@
 """Представления для работы с пользователями."""
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login
 from django.contrib.auth import get_user_model
-from django.core.paginator import Paginator
-from django.db.models import Count
 from django.shortcuts import get_object_or_404, render, redirect
-from django.contrib import messages
+from django.db.models import Count
+from django.core.paginator import Paginator
 from django.utils import timezone
-
-from .forms import UserRegistrationForm
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
 
 User = get_user_model()
 
@@ -15,20 +15,22 @@ User = get_user_model()
 def registration(request):
     """Регистрация нового пользователя."""
     if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
+        form = UserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(
-                request,
-                'Регистрация прошла успешно! Теперь вы можете войти.'
-            )
-            return redirect('login')
+            user = form.save()
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+            messages.success(request, 'Регистрация прошла успешно!')
+            return redirect('blog:index')
     else:
-        form = UserRegistrationForm()
-    return render(request, 'users/registration.html', {'form': form})
+        form = UserCreationForm()
+    
+    return render(request, 'registration/registration_form.html', {'form': form})
 
 
-@login_required
 def profile(request, username):
     """Страница профиля пользователя."""
     profile_user = get_object_or_404(User, username=username)
@@ -44,7 +46,7 @@ def profile(request, username):
             pub_date__lte=timezone.now()
         )
 
-    # АННОТИРУЕМ количество комментариев
+    # Аннотация для количества комментариев
     post_list = post_list.annotate(
         comment_count=Count('comments')
     ).select_related(
@@ -60,3 +62,31 @@ def profile(request, username):
         'page_obj': page_obj,
     }
     return render(request, 'users/profile.html', context)
+
+
+@login_required
+def edit_profile(request, username):
+    """
+    Редактирование профиля пользователя.
+    """
+    user = get_object_or_404(User, username=username)
+
+    if request.user != user:
+        return redirect('users:profile', username=username)
+
+    # Реализация редактирования профиля
+    return render(request, 'users/edit_profile.html', {'user': user})
+
+
+@login_required
+def change_password(request, username):
+    """
+    Изменение пароля пользователя.
+    """
+    user = get_object_or_404(User, username=username)
+
+    if request.user != user:
+        return redirect('users:profile', username=username)
+
+    # Реализация смены пароля
+    return render(request, 'users/change_password.html', {'user': user})

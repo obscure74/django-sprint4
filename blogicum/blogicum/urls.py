@@ -11,11 +11,16 @@ handler500 = 'pages.views.server_error'
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('django.contrib.auth.urls')),
-    path('auth/', include('users.urls', namespace='users')),
     path('', include('blog.urls', namespace='blog')),
     path('pages/', include('pages.urls', namespace='pages')),
 ]
 
+
+urlpatterns += [
+    path('auth/', include('users.urls', namespace='users')),
+]
+
+# Медиафайлы в режиме отладки
 if settings.DEBUG:
     urlpatterns += static(
         settings.MEDIA_URL,
