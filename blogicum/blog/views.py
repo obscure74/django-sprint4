@@ -111,10 +111,7 @@ def create_post(request):
             post.save()
 
             # Перенаправляем на страницу профиля пользователя
-            return redirect(
-                'users:profile',
-                username=request.user.username
-            )
+            return redirect('profile', username=request.user.username)
     else:
         # Устанавливаем текущую дату и время по умолчанию
         form = PostForm(initial={'pub_date': timezone.now()})

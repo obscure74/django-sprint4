@@ -5,23 +5,15 @@ from . import views
 app_name = 'blog'
 
 urlpatterns = [
-    # Главная страница
     path('', views.index, name='index'),
-
-    # Детальная страница поста
     path('posts/<int:post_id>/', views.post_detail, name='post_detail'),
-
-    # Категории
-    path('category/<slug:category_slug>/', views.category_posts, name='category_posts'),
-
-    # Создание поста - ВАЖНО: без префикса 'posts/'
-    path('create/', views.create_post, name='create_post'),
-
-    # Редактирование и удаление постов
+    path(
+        'category/<slug:category_slug>/',
+        views.category_posts, name='category_posts'
+    ),
+    path('posts/create/', views.create_post, name='create_post'),
     path('posts/<int:post_id>/edit/', views.edit_post, name='edit_post'),
     path('posts/<int:post_id>/delete/', views.delete_post, name='delete_post'),
-
-    # Комментарии
     path('posts/<int:post_id>/comment/', views.add_comment, name='add_comment'),
     path(
         'posts/<int:post_id>/edit_comment/<int:comment_id>/',
