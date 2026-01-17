@@ -15,8 +15,16 @@ urlpatterns = [
     ),
     path('posts/create/', views.create_post, name='create_post'),
     path('posts/<int:post_id>/edit/', views.edit_post, name='edit_post'),
-    path('posts/<int:post_id>/delete/', views.delete_post, name='delete_post'),
-    path('posts/<int:post_id>/comment/', views.add_comment, name='add_comment'),
+    path(
+        'posts/<int:post_id>/delete/',
+        views.delete_post,
+        name='delete_post'
+    ),
+    path(
+        'posts/<int:post_id>/comment/',
+        views.add_comment,
+        name='add_comment'
+    ),
     path(
         'posts/<int:post_id>/edit_comment/<int:comment_id>/',
         views.edit_comment,
@@ -27,7 +35,6 @@ urlpatterns = [
         views.delete_comment,
         name='delete_comment'
     ),
-
-    # ДОБАВИТЬ: маршрут для профиля в пространстве имен blog
+    # ВАЖНО: Добавляем маршрут для профиля в пространстве имен blog
     path('profile/<str:username>/', profile, name='profile'),
 ]

@@ -23,7 +23,11 @@ def registration(request):
     else:
         form = UserCreationForm()
 
-    return render(request, 'registration/registration_form.html', {'form': form})
+    return render(
+        request, 'registration/registration_form.html', {
+            'form': form,
+        }
+    )
 
 
 def profile(request, username):
@@ -72,4 +76,3 @@ def change_password(request, username):
     if request.user != user:
         return redirect('profile', username=username)
     return render(request, 'blog/change_password.html', {'user': user})
-
