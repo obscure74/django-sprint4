@@ -224,5 +224,27 @@ def delete_comment(request, post_id, comment_id):
 
 
 def profile_redirect(request, username):
-    """Перенаправление с blog:profile на users:profile."""
-    return redirect('users:profile', username=username)
+    """Страница профиля пользователя."""
+    profile_user = get_object_or_404(User, username=username)
+
+    if request.user == profile_user:
+        post_list = profile_user.posts.all()
+    else:
+        post_list = profile_user.posts.filter(
+            is_published=True,
+            category__is_published=True,
+            pub_date__lte=timezone.now()
+        )
+
+    post_list = post_list.annotate(comment_count=Count('comments'))
+    post_list = post_list.order_by('-pub_date')
+
+    paginator = Paginator(post_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'profile_user': profile_user,
+        'page_obj': page_obj,
+    }
+    return render(request, 'users/profile.html', context)
