@@ -3,7 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, Http404
 from django.utils import timezone
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Count
 from django.contrib.auth import get_user_model
 
@@ -27,7 +27,15 @@ def index(request):
 
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        # Если page_number не целое число
+        page_obj = paginator.get_page(1)
+    except EmptyPage:
+        # Если страница вне диапазона
+        page_obj = paginator.get_page(paginator.num_pages)
 
     return render(request, 'blog/index.html', {'page_obj': page_obj})
 
