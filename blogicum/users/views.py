@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.utils import timezone
 
 from .forms import UserRegistrationForm
+
 User = get_user_model()
 
 
