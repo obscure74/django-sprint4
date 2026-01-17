@@ -1,5 +1,6 @@
 """URL-маршруты для приложения blog."""
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 app_name = 'blog'
@@ -9,8 +10,8 @@ urlpatterns = [
     path('posts/<int:post_id>/', views.post_detail, name='post_detail'),
     path(
         'category/<slug:category_slug>/',
-        views.category_posts,
-        name='category_posts'  # Изменили с 'category' на 'category_posts'
+        views.category_postадфs,
+        name='category_posts'
     ),
 
     # Создание и редактирование постов
@@ -34,11 +35,9 @@ urlpatterns = [
         views.delete_comment,
         name='delete_comment'
     ),
-
-    # Профиль пользователя
     path(
         'profile/<str:username>/',
-        views.profile_redirect,
+        RedirectView.as_view(pattern_name='users:profile', permanent=True),
         name='profile'
     ),
 ]

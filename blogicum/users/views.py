@@ -32,22 +32,29 @@ def registration(request):
 def profile(request, username):
     """Страница профиля пользователя."""
     profile_user = get_object_or_404(User, username=username)
-
+    
+    # Для автора показываем все посты
     if request.user == profile_user:
         post_list = profile_user.posts.all()
     else:
+        # Для других пользователей - только опубликованные
         post_list = profile_user.posts.filter(
             is_published=True,
             category__is_published=True,
             pub_date__lte=timezone.now()
         )
-
-    post_list = post_list.annotate(comment_count=Count('comments'))
-
+    
+    # АННОТИРУЕМ количество комментариев
+    post_list = post_list.annotate(
+        comment_count=Count('comments')
+    ).select_related(
+        'category', 'location'
+    ).order_by('-pub_date')
+    
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-
+    
     context = {
         'profile_user': profile_user,
         'page_obj': page_obj,
