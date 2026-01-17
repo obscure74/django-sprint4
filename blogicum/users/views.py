@@ -72,3 +72,4 @@ def change_password(request, username):
     if request.user != user:
         return redirect('profile', username=username)
     return render(request, 'blog/change_password.html', {'user': user})
+

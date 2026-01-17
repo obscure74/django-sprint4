@@ -7,7 +7,7 @@ TEMPLATES_DIR = BASE_DIR / 'templates'
 
 SECRET_KEY = 'django-insecure-g#ouzg_4jiqr$oz--bjzhzi22^r*%&xtmoy#ytt-6(u1cl1m@i'
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
 

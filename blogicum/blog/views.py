@@ -31,10 +31,8 @@ def index(request):
     try:
         page_obj = paginator.get_page(page_number)
     except PageNotAnInteger:
-        # Если page_number не целое число
         page_obj = paginator.get_page(1)
     except EmptyPage:
-        # Если страница вне диапазона
         page_obj = paginator.get_page(paginator.num_pages)
 
     return render(request, 'blog/index.html', {'page_obj': page_obj})
@@ -59,7 +57,13 @@ def category_posts(request, category_slug):
 
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.get_page(1)
+    except EmptyPage:
+        page_obj = paginator.get_page(paginator.num_pages)
 
     context = {
         'category': category,
@@ -72,17 +76,12 @@ def post_detail(request, post_id):
     """Детальная страница публикации."""
     post = get_object_or_404(Post, id=post_id)
 
-    # Проверяем доступ к посту
     if not post.is_published or post.pub_date > timezone.now():
-        # Если пост не опубликован или отложен
         if request.user != post.author:
-            # И пользователь не автор - показываем 404
             raise Http404("Публикация не найдена")
 
-    # Комментарии
     comments = post.comments.filter(is_published=True)
 
-    # Форма для комментариев (если пользователь авторизован)
     if request.method == 'POST' and request.user.is_authenticated:
         comment_form = CommentForm(request.POST)
         if comment_form.is_valid():
@@ -111,17 +110,13 @@ def create_post(request):
             post = form.save(commit=False)
             post.author = request.user
 
-            # Проверяем, является ли пост отложенным
             if post.pub_date > timezone.now():
-                # Отложенный пост - не публикуем сразу
                 post.is_published = True
 
             post.save()
 
-            # Перенаправляем на страницу профиля пользователя
             return redirect('profile', username=request.user.username)
     else:
-        # Устанавливаем текущую дату и время по умолчанию
         form = PostForm(initial={'pub_date': timezone.now()})
 
     return render(request, 'blog/create.html', {'form': form})
@@ -132,9 +127,7 @@ def edit_post(request, post_id):
     """Редактирование существующей публикации."""
     post = get_object_or_404(Post, id=post_id)
 
-    # Проверяем, что пользователь является автором
     if post.author != request.user:
-        # Если не автор - перенаправляем на страницу поста
         return redirect('blog:post_detail', post_id=post_id)
 
     if request.method == 'POST':
@@ -145,7 +138,6 @@ def edit_post(request, post_id):
     else:
         form = PostForm(instance=post)
 
-    # Используем тот же шаблон, что и для создания
     return render(request, 'blog/create.html', {'form': form})
 
 
@@ -160,9 +152,8 @@ def delete_post(request, post_id):
     if request.method == 'POST':
         username = post.author.username
         post.delete()
-        return redirect('users:profile', username=username)
+        return redirect('profile', username=username)
 
-    # Для GET запроса показываем страницу подтверждения
     return render(request, 'blog/detail.html', {'post': post})
 
 
