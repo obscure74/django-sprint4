@@ -4,7 +4,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
-from .models import Post, Comment
+from .models import Comment, Post
 
 
 class RegistrationForm(UserCreationForm):

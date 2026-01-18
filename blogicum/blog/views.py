@@ -1,52 +1,19 @@
 """Представления для приложения blog."""
-from django.contrib.auth import get_user_model
-from django.contrib.auth import login
+from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.mixins import UserPassesTestMixin
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.paginator import Paginator
 from django.db.models import Count
-from django.http import Http404
-from django.http import HttpResponseNotFound
-from django.http import HttpResponseServerError
-from django.shortcuts import get_object_or_404
-from django.shortcuts import render, redirect
+from django.http import Http404, HttpResponseNotFound, HttpResponseServerError
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import CreateView
-from django.views.generic import DeleteView
-from django.views.generic import UpdateView
+from django.views.generic import CreateView, DeleteView, UpdateView
 
-
-from .forms import CommentForm
-from .forms import PostForm
-from .forms import RegistrationForm
-from .forms import UserEditForm
-from .models import Category
-from .models import Comment
-from .models import Post
+from .forms import CommentForm, PostForm, RegistrationForm, UserEditForm
+from .models import Category, Comment, Post
 
 User = get_user_model()
-
-
-def registration(request):
-    """Регистрация пользователя (FBV версия)."""
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Регистрация прошла успешно!')
-            return redirect('login')
-    else:
-        form = UserCreationForm()
-
-    return render(
-        request, 'registration/registration_form.html', {
-            'form': form,
-        }
-    )
 
 
 def csrf_failure(request, reason=''):
@@ -153,27 +120,6 @@ def profile_view(request, username):
         'profile': user,
         'page_obj': page_obj,
     })
-
-
-@login_required
-def edit_profile(request, username):
-    """Редактирование профиля (FBV версия)."""
-
-    user = get_object_or_404(User, username=username)
-
-    if request.user != user:
-        return redirect('blog:profile', username=username)
-
-    if request.method == 'POST':
-        form = UserEditForm(request.POST, instance=user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Профиль успешно обновлен!')
-            return redirect('blog:profile', username=username)
-    else:
-        form = UserEditForm(instance=user)
-
-    return render(request, 'blog/user.html', {'form': form})
 
 
 class RegistrationView(CreateView):
