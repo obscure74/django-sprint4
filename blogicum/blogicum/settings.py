@@ -7,7 +7,7 @@ TEMPLATES_DIR = BASE_DIR / 'templates'
 
 SECRET_KEY = 'django-insecure-g#ouzg_4jiqr$oz--bjzhzi22^r*%&xtmoy#ytt-6(u1cl1m@i'
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
 
@@ -92,17 +92,18 @@ USE_I18N = True
 USE_TZ = True
 
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',
+    os.path.join(BASE_DIR, 'static'),
 ]
 
+STATIC_ROOT =  os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-LOGIN_URL = 'auth/login/'
+LOGIN_URL = 'login'
 
 LOGIN_REDIRECT_URL = 'blog:index'
 
@@ -113,11 +114,13 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
-# Создаем папку для сохранения писем
-if not os.path.exists(EMAIL_FILE_PATH):
-    os.makedirs(EMAIL_FILE_PATH)
-
 
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+if DEBUG:
+    EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+    # Создаем директорию если её нет
+    os.makedirs(EMAIL_FILE_PATH, exist_ok=True)

@@ -1,66 +1,80 @@
-"""Формы для работы с публикациями."""
+"""Формы для приложения blog."""
 from django import forms
-from django.utils import timezone
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Post, Category, Comment
+from django.core.exceptions import ValidationError
+
+from .models import Post, Comment
 
 
-class UserEditForm(forms.ModelForm):
-    """Форма для редактирования профиля пользователя."""
+class RegistrationForm(UserCreationForm):
+    """Форма регистрации."""
+
+    email = forms.EmailField(required=True, label='Email')
+    first_name = forms.CharField(max_length=30, required=False, label='Имя')
+    last_name = forms.CharField(max_length=30, required=False, label='Фамилия')
 
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'email')
+        fields = (
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'password1',
+            'password2'
+        )
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise ValidationError('Email уже используется')
+        return email
+
+
+class UserEditForm(forms.ModelForm):
+    """Редактирование профиля."""
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'username', 'email')
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if (User.objects.filter(email=email)
+                .exclude(id=self.instance.id)
+                .exists()):
+            raise ValidationError('Email уже используется')
+        return email
 
 
 class PostForm(forms.ModelForm):
-    """Форма для создания и редактирования публикации."""
+    """Форма поста."""
 
     class Meta:
         model = Post
         fields = (
-            "title",
-            "text",
-            "pub_date",
-            "location",
-            "category",
-            "image",
+            'title',
+            'text',
+            'pub_date',
+            'image',
+            'location',
+            'category',
+            'is_published'
         )
         widgets = {
-            "pub_date": forms.DateTimeInput(
-                attrs={"type": "datetime-local"}
+            'pub_date': forms.DateTimeInput(
+                attrs={'type': 'datetime-local'}
             ),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Фильтруем только опубликованные категории
-        self.fields["category"].queryset = Category.objects.filter(
-            is_published=True
-        )
-
-    def clean_pub_date(self):
-        """Валидация даты публикации."""
-        pub_date = self.cleaned_data.get("pub_date")
-        if pub_date and pub_date < timezone.now():
-            raise forms.ValidationError(
-                "Дата публикации не может быть в прошлом."
-            )
-        return pub_date
-
 
 class CommentForm(forms.ModelForm):
-    """Форма для добавления и редактирования комментария."""
+    """Форма комментария."""
 
     class Meta:
         model = Comment
         fields = ('text',)
         widgets = {
-            'text': forms.Textarea(attrs={
-                'rows': 3,
-                'placeholder': 'Введите ваш комментарий...'
-            }),
-        }
-        labels = {
-            'text': 'Текст комментария',
+            'text': forms.Textarea(attrs={'rows': 3}),
         }

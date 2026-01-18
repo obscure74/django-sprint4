@@ -1,6 +1,6 @@
 """Обработчики для кастомных страниц ошибок."""
-from django.shortcuts import render
 from django.http import HttpResponseForbidden
+from django.shortcuts import render
 
 
 def page_not_found(request, exception):

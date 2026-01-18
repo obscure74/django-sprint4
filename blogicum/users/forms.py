@@ -1,6 +1,7 @@
 """Формы для работы с пользователями."""
 from django import forms
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 
 class UserRegistrationForm(forms.ModelForm):
@@ -25,14 +26,14 @@ class UserRegistrationForm(forms.ModelForm):
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
         if password1 and password2 and password1 != password2:
-            raise forms.ValidationError("Пароли не совпадают")
+            raise ValidationError("Пароли не совпадают")
         return password2
 
     def clean_email(self):
         """Проверка уникальности email."""
         email = self.cleaned_data.get('email')
         if User.objects.filter(email=email).exists():
-            raise forms.ValidationError('Этот email уже используется.')
+            raise ValidationError('Этот email уже используется.')
         return email
 
     def save(self, commit=True):

@@ -1,4 +1,6 @@
+"""Модели приложения blog."""
 from django.contrib.auth import get_user_model
+from django.core.validators import MinLengthValidator
 from django.db import models
 
 User = get_user_model()
@@ -7,10 +9,7 @@ User = get_user_model()
 class Location(models.Model):
     """Модель местоположения."""
 
-    name = models.CharField(
-        'Название места',
-        max_length=256
-    )
+    name = models.CharField('Название места', max_length=256)
     is_published = models.BooleanField(
         'Опубликовано',
         default=True,
@@ -55,22 +54,19 @@ class Category(models.Model):
 
 
 class Post(models.Model):
-    """Модель публикации."""
+    """Модель поста блога."""
 
     title = models.CharField(
         'Заголовок',
         max_length=256,
-        help_text='Введите заголовок публикации'
+        validators=[MinLengthValidator(3)]
     )
-    text = models.TextField(
-        'Текст',
-        help_text='Введите текст публикации'
-    )
+    text = models.TextField('Текст')
     pub_date = models.DateTimeField(
         'Дата и время публикации',
         help_text=(
             'Если установить дату и время в будущем '
-            '— можно делать отложенные публикации'
+            '— можно делать отложенные публикации.'
         )
     )
     author = models.ForeignKey(
@@ -80,7 +76,7 @@ class Post(models.Model):
         related_name='posts'
     )
     location = models.ForeignKey(
-        Location,
+        'Location',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -88,7 +84,7 @@ class Post(models.Model):
         related_name='posts'
     )
     category = models.ForeignKey(
-        Category,
+        'Category',
         on_delete=models.SET_NULL,
         null=True,
         verbose_name='Категория',
@@ -102,34 +98,34 @@ class Post(models.Model):
     created_at = models.DateTimeField('Добавлено', auto_now_add=True)
     image = models.ImageField(
         'Изображение',
-        upload_to='posts/',
+        upload_to='posts_images/',
         blank=True,
-        null=True,
-        help_text='Загрузите изображение для публикации'
+        null=True
     )
 
     class Meta:
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
-        ordering = ('-pub_date',)
-        default_related_name = 'posts'
+        ordering = ['-pub_date']
 
     def __str__(self):
-        return self.title[:30]
+        return self.title
+
+    @property
+    def comment_count(self):
+        """Количество комментариев к посту."""
+        return self.comments.count()
 
 
 class Comment(models.Model):
-    """Модель комментария к публикации."""
+    """Модель комментария."""
 
-    text = models.TextField(
-        'Текст комментария',
-        help_text='Введите текст комментария'
-    )
+    text = models.TextField('Текст комментария')
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
         related_name='comments',
-        verbose_name='Публикация'
+        verbose_name='Пост'
     )
     author = models.ForeignKey(
         User,
@@ -137,20 +133,15 @@ class Comment(models.Model):
         related_name='comments',
         verbose_name='Автор'
     )
-    created_at = models.DateTimeField(
-        'Дата и время создания комментария',
-        auto_now_add=True
-    )
-    is_published = models.BooleanField(
-        'Опубликовано',
-        default=True,
-        help_text='Снимите галочку, чтобы скрыть комментарий.'
-    )
+    created_at = models.DateTimeField('Добавлено', auto_now_add=True)
 
     class Meta:
-        ordering = ('created_at',)
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
+        ordering = ['created_at']
 
     def __str__(self):
-        return self.text[:30]
+        return (
+            f'Комментарий от {self.author.username} '
+            f'к посту "{self.post.title}"'
+        )

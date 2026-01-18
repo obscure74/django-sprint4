@@ -1,15 +1,31 @@
 """Представления для работы с пользователями."""
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404, render, redirect
-from django.db.models import Count
-from django.core.paginator import Paginator
-from django.utils import timezone
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib import messages
 from blog.models import Post
+from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
+from django.core.paginator import Paginator
+from django.db.models import Count
+from django.http import HttpResponseNotFound, HttpResponseServerError
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 User = get_user_model()
+
+
+def csrf_failure(request, reason=''):
+    """Кастомная страница ошибки 403 CSRF."""
+    return render(request, 'pages/403csrf.html', status=403)
+
+
+def page_not_found(request, exception):
+    """Кастомная страница ошибки 404."""
+    return HttpResponseNotFound(render(request, 'pages/404.html'))
+
+
+def server_error(request):
+    """Кастомная страница ошибки 500."""
+    return HttpResponseServerError(render(request, 'pages/500.html'))
 
 
 def registration(request):
@@ -55,7 +71,7 @@ def profile(request, username):
     page_obj = paginator.get_page(page_number)
 
     return render(request, 'blog/profile.html', {
-        'profile_user': profile_user,
+        'profile': profile_user,
         'page_obj': page_obj,
     })
 
@@ -63,16 +79,19 @@ def profile(request, username):
 @login_required
 def edit_profile(request, username):
     """Редактирование профиля."""
+    from .forms import UserEditForm
     user = get_object_or_404(User, username=username)
-    if request.user != user:
-        return redirect('profile', username=username)
-    return render(request, 'blog/edit_profile.html', {'user': user})
 
-
-@login_required
-def change_password(request, username):
-    """Смена пароля."""
-    user = get_object_or_404(User, username=username)
     if request.user != user:
-        return redirect('profile', username=username)
-    return render(request, 'blog/change_password.html', {'user': user})
+        return redirect('users:profile', username=username)
+
+    if request.method == 'POST':
+        form = UserEditForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Профиль успешно обновлен!')
+            return redirect('users:profile', username=username)
+    else:
+        form = UserEditForm(instance=user)
+
+    return render(request, 'blog/user.html', {'form': form})
