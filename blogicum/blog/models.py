@@ -140,7 +140,6 @@ class Comment(models.Model):
         help_text='Снимите галочку, чтобы скрыть комментарий.'
     )
 
-
     class Meta:
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
