@@ -7,7 +7,7 @@ TEMPLATES_DIR = BASE_DIR / 'templates'
 
 SECRET_KEY = 'django-insecure-g#ouzg_4jiqr$oz--bjzhzi22^r*%&xtmoy#ytt-6(u1cl1m@i'
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
 
@@ -21,7 +21,6 @@ INSTALLED_APPS = [
     'django_bootstrap5',
     'pages.apps.PagesConfig',
     'blog.apps.BlogConfig',
-    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
@@ -95,10 +94,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    BASE_DIR / 'static',
 ]
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -117,10 +116,9 @@ EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
 
 
-if DEBUG:
-    EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
-    # Создаем директорию если её нет
-    os.makedirs(EMAIL_FILE_PATH, exist_ok=True)
+os.makedirs(EMAIL_FILE_PATH, exist_ok=True)
+os.makedirs(STATIC_ROOT, exist_ok=True)
+os.makedirs(MEDIA_ROOT, exist_ok=True)

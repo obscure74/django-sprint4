@@ -111,9 +111,8 @@ class Post(models.Model):
     def __str__(self):
         return self.title
 
-    @property
-    def comment_count(self):
-        """Количество комментариев к посту."""
+    def get_comment_count(self):
+        """Возвращает количество комментариев к посту."""
         return self.comments.count()
 
 
