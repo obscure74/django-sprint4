@@ -134,6 +134,12 @@ class Comment(models.Model):
         verbose_name='Автор'
     )
     created_at = models.DateTimeField('Добавлено', auto_now_add=True)
+    is_published = models.BooleanField(
+        'Опубликовано',
+        default=True,
+        help_text='Снимите галочку, чтобы скрыть комментарий.'
+    )
+
 
     class Meta:
         verbose_name = 'комментарий'

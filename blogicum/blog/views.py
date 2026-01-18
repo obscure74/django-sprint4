@@ -9,6 +9,9 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, DeleteView, UpdateView
+from django.contrib import messages
+from django.shortcuts import redirect
+
 
 from .forms import CommentForm, PostForm, RegistrationForm, UserEditForm
 from .models import Category, Comment, Post
@@ -102,14 +105,16 @@ def profile_view(request, username):
 
     if request.user == user:
         post_list = user.posts.all().select_related(
-            'category', 'location'
+            'category', 'location', 'author'
         ).order_by('-pub_date')
     else:
         post_list = user.posts.filter(
             is_published=True,
             category__is_published=True,
             pub_date__lte=timezone.now()
-        ).select_related('category', 'location').order_by('-pub_date')
+        ).select_related(
+            'category', 'location', 'author'
+        ).order_by('-pub_date')
 
     post_list = post_list.annotate(comment_count=Count('comments'))
     paginator = Paginator(post_list, 10)
@@ -120,6 +125,26 @@ def profile_view(request, username):
         'profile': user,
         'page_obj': page_obj,
     })
+
+
+@login_required
+def edit_profile(request, username):
+    """Редактирование профиля."""
+    user = get_object_or_404(User, username=username)
+
+    if request.user != user:
+        return redirect('blog:profile', username=username)
+
+    if request.method == 'POST':
+        form = UserEditForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Профиль успешно обновлен!')
+            return redirect('blog:profile', username=username)
+    else:
+        form = UserEditForm(instance=user)
+
+    return render(request, 'blog/user.html', {'form': form})
 
 
 class RegistrationView(CreateView):
