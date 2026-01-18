@@ -82,6 +82,3 @@ class CommentForm(forms.ModelForm):
                 'placeholder': 'Введите комментарий...'
             }),
         }
-        labels = {
-            'text': 'Текст комментария',
-        }

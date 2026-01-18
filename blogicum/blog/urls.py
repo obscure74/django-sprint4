@@ -34,4 +34,6 @@ urlpatterns = [
     # Регистрация
     path('auth/registration/', views.RegistrationView.as_view(),
          name='registration'),
+    path('registration/', views.RegistrationView.as_view(),
+         name='registration_global'),
 ]
