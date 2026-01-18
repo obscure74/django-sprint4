@@ -1,7 +1,9 @@
 """Представления для статичных страниц."""
 from django.views.generic import TemplateView
 from django.shortcuts import render
-from django.http import HttpResponseForbidden, HttpResponseNotFound, HttpResponseServerError
+from django.http import HttpResponseForbidden
+from django.http import HttpResponseNotFound
+from django.http import HttpResponseServerError
 
 
 def csrf_failure(request, reason=''):

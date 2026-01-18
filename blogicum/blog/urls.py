@@ -27,14 +27,8 @@ urlpatterns = [
          views.CommentDeleteView.as_view(), name='delete_comment'),
     # Пользователи
     path('profile/<str:username>/', views.profile_view, name='profile'),
-    # ДВА варианта редактирования профиля:
-    # 1. Без username
-    path(
-        'profile/edit/',
-        views.ProfileEditView.as_view(),
-        name='edit_profile'
-     ),
-    # 2. С username
+    path('profile/edit/', views.ProfileEditView.as_view(),
+         name='edit_profile'),
     path('profile/<str:username>/edit/', views.edit_profile,
          name='edit_profile_with_username'),
     # Регистрация
