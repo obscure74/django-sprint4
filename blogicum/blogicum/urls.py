@@ -6,9 +6,9 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
 
 # Обработчики ошибок
-handler403 = 'blog.views.csrf_failure'
-handler404 = 'blog.views.page_not_found'
-handler500 = 'blog.views.server_error'
+handler403 = 'pages.views.csrf_failure'
+handler404 = 'pages.views.page_not_found'
+handler500 = 'pages.views.server_error'
 
 urlpatterns = [
     path('admin/', admin.site.urls),

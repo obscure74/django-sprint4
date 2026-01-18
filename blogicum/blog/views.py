@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Count
 from django.http import Http404, HttpResponseNotFound, HttpResponseServerError
 from django.shortcuts import get_object_or_404, redirect, render
@@ -96,16 +96,17 @@ def post_detail(request, post_id):
     })
 
 
-@login_required
 def profile_view(request, username):
     """Профиль пользователя."""
     user = get_object_or_404(User, username=username)
 
+    # Для владельца профиля показываем все посты
     if request.user == user:
         post_list = user.posts.all().select_related(
             'category', 'location', 'author'
         ).order_by('-pub_date')
     else:
+        # Для других - только опубликованные
         post_list = user.posts.filter(
             is_published=True,
             category__is_published=True,
@@ -114,15 +115,25 @@ def profile_view(request, username):
             'category', 'location', 'author'
         ).order_by('-pub_date')
 
+    # Аннотируем количество комментариев
     post_list = post_list.annotate(comment_count=Count('comments'))
-    paginator = Paginator(post_list, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
 
-    return render(request, 'blog/profile.html', {
+    # Пагинация
+    paginator = Paginator(post_list, 10)
+    page_number = request.GET.get('page', 1)
+
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    context = {
         'profile': user,
         'page_obj': page_obj,
-    })
+    }
+    return render(request, 'blog/profile.html', context)
 
 
 @login_required
