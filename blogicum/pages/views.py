@@ -1,15 +1,14 @@
 """Представления для статичных страниц."""
+
 from django.http import (HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseServerError)
 from django.shortcuts import render
 from django.views.generic import TemplateView
 
 
-def csrf_failure(request, reason=''):
+def csrf_failure(request, reason='', **kwargs):
     """Кастомная страница ошибки 403 CSRF."""
-    return HttpResponseForbidden(
-        render(request, 'pages/403csrf.html', status=403)
-    )
+    return HttpResponseForbidden(render(request, 'pages/403csrf.html'))
 
 
 def page_not_found(request, exception):

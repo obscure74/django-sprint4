@@ -1,6 +1,7 @@
+"""Административный интерфейс для приложения blog."""
 from django.contrib import admin
 
-from .models import Category, Location, Post
+from .models import Category, Comment, Location, Post
 
 
 @admin.register(Post)
@@ -22,7 +23,7 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display_links = ('title',)
     list_filter = ('is_published',)
     search_fields = ('title', 'description')
-    prepopulated_fields = {'slug': ('title',)}  # Автозаполнение slug
+    prepopulated_fields = {'slug': ('title',)}
 
 
 @admin.register(Location)
@@ -33,3 +34,14 @@ class LocationAdmin(admin.ModelAdmin):
     list_display_links = ('name',)
     list_filter = ('is_published',)
     search_fields = ('name',)
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    """Административный интерфейс для модели Comment."""
+
+    list_display = ('author', 'post', 'created_at', 'is_published')
+    list_display_links = ('author',)
+    list_filter = ('is_published', 'created_at')
+    search_fields = ('text', 'author__username', 'post__title')
+    list_per_page = 20

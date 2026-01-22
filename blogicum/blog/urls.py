@@ -1,4 +1,5 @@
 """URL-маршруты для приложения blog."""
+
 from django.urls import path
 
 from . import views
@@ -10,15 +11,14 @@ urlpatterns = [
     path('', views.index, name='index'),
     # Посты
     path('posts/<int:post_id>/', views.post_detail, name='post_detail'),
-    path('posts/create/', views.PostCreateView.as_view(),
-         name='create_post'),
-    path('posts/<int:post_id>/edit/', views.PostUpdateView.as_view(),
-         name='edit_post'),
-    path('posts/<int:post_id>/delete/', views.PostDeleteView.as_view(),
-         name='delete_post'),
+    path('posts/create/', views.PostCreateView.as_view(), name='create_post'),
+    path('posts/<int:post_id>/edit/',
+         views.PostUpdateView.as_view(), name='edit_post'),
+    path('posts/<int:post_id>/delete/',
+         views.PostDeleteView.as_view(), name='delete_post'),
     # Категории
-    path('category/<slug:category_slug>/', views.category_posts,
-         name='category_posts'),
+    path('category/<slug:category_slug>/',
+         views.category_posts, name='category_posts'),
     # Комментарии
     path('posts/<int:post_id>/comment/',
          views.CommentCreateView.as_view(), name='add_comment'),
@@ -27,10 +27,7 @@ urlpatterns = [
     path('posts/<int:post_id>/delete_comment/<int:comment_id>/',
          views.CommentDeleteView.as_view(), name='delete_comment'),
     # Пользователи
-    path('profile/edit/',
-         views.ProfileEditView.as_view(), name='edit_profile'),
+    path('profile/edit/', views.ProfileEditView.as_view(),
+         name='edit_profile'),
     path('profile/<str:username>/', views.profile_view, name='profile'),
-    # Регистрация
-    path('auth/registration/', views.RegistrationView.as_view(),
-         name='registration'),
 ]

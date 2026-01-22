@@ -4,7 +4,9 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
-from .models import Category, Comment, Location, Post
+from .constants import (DATETIME_FORMAT_HTML, FIRST_NAME_MAX_LENGTH,
+                        LAST_NAME_MAX_LENGTH)
+from .models import Comment, Post
 
 
 class RegistrationForm(UserCreationForm):
@@ -15,14 +17,14 @@ class RegistrationForm(UserCreationForm):
         label='Адрес электронной почты'
     )
     first_name = forms.CharField(
-        max_length=30,
-        required=True,  # Обязательное!
+        max_length=FIRST_NAME_MAX_LENGTH,
+        required=True,
         label='Имя',
         help_text='Обязательное поле'
     )
     last_name = forms.CharField(
-        max_length=30,
-        required=True,  # Обязательное!
+        max_length=LAST_NAME_MAX_LENGTH,
+        required=True,
         label='Фамилия',
         help_text='Обязательное поле'
     )
@@ -45,21 +47,19 @@ class RegistrationForm(UserCreationForm):
             raise forms.ValidationError('Имя обязательно для заполнения')
         return first_name
 
+    def clean_last_name(self):
+        """Проверяем что фамилия заполнена."""
+        last_name = self.cleaned_data.get('last_name', '').strip()
+        if not last_name:
+            raise forms.ValidationError('Фамилия обязательна для заполнения')
+        return last_name
+
     def clean_email(self):
+        """Проверяем уникальность email."""
         email = self.cleaned_data.get('email')
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError('Email уже используется')
         return email
-
-    def save(self, commit=True):
-        """Сохраняем пользователя, гарантируя что имя заполнено."""
-        user = super().save(commit=False)
-        # Гарантируем что first_name не пустое
-        if not user.first_name or not user.first_name.strip():
-            user.first_name = user.username
-        if commit:
-            user.save()
-        return user
 
 
 class UserEditForm(forms.ModelForm):
@@ -72,7 +72,6 @@ class UserEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         """Настройка формы."""
         super().__init__(*args, **kwargs)
-        # Делаем email обязательным
         self.fields['email'].required = True
 
     def clean_email(self):
@@ -93,6 +92,13 @@ class UserEditForm(forms.ModelForm):
             raise ValidationError('Имя обязательно для заполнения')
         return first_name
 
+    def clean_last_name(self):
+        """Проверяет что фамилия заполнена."""
+        last_name = self.cleaned_data.get('last_name', '').strip()
+        if not last_name:
+            raise ValidationError('Фамилия обязательна для заполнения')
+        return last_name
+
 
 class PostForm(forms.ModelForm):
     """Форма поста."""
@@ -110,6 +116,7 @@ class PostForm(forms.ModelForm):
         )
         widgets = {
             'pub_date': forms.DateTimeInput(
+                format=DATETIME_FORMAT_HTML,
                 attrs={'type': 'datetime-local'}
             ),
         }
@@ -117,30 +124,14 @@ class PostForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         """Настройка формы."""
         super().__init__(*args, **kwargs)
-        # Убедитесь что queryset существует
         if 'category' in self.fields:
-            self.fields['category'].queryset = Category.objects.filter(
-                is_published=True
-            )
+            self.fields['category'].queryset = self.fields[
+                'category'
+            ].queryset.filter(is_published=True)
         if 'location' in self.fields:
-            self.fields['location'].queryset = Location.objects.filter(
-                is_published=True
-            )
-
-        # Фильтруем местоположения
-        if 'location' in self.fields:
-            self.fields['location'].queryset = Location.objects.filter(
-                is_published=True
-            )
-            self.fields['location'].widget.attrs.update(
-                {'class': 'form-control'}
-            )
-
-        # Поле is_published
-        if 'is_published' in self.fields:
-            self.fields['is_published'].widget.attrs.update(
-                {'class': 'form-check-input'}
-            )
+            self.fields['location'].queryset = self.fields[
+                'location'
+            ].queryset.filter(is_published=True)
 
 
 class CommentForm(forms.ModelForm):

@@ -1,6 +1,12 @@
 """Обработчики для кастомных страниц ошибок."""
+
 from django.http import HttpResponseForbidden
 from django.shortcuts import render
+
+
+def csrf_failure(request, reason=''):
+    """Обработчик для ошибки CSRF 403."""
+    return render(request, 'pages/403csrf.html', status=403)
 
 
 def page_not_found(request, exception):
@@ -11,11 +17,6 @@ def page_not_found(request, exception):
 def server_error(request):
     """Обработчик для ошибки 500."""
     return render(request, 'pages/500.html', status=500)
-
-
-def csrf_failure(request, reason=''):
-    """Обработчик для ошибки CSRF 403."""
-    return render(request, 'pages/403csrf.html', status=403)
 
 
 def permission_denied(request, exception):
