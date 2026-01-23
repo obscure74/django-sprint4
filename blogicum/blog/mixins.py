@@ -25,21 +25,6 @@ class CommentBaseMixin(LoginRequiredMixin, UserPassesTestMixin):
         return redirect('blog:post_detail', post_id=comment.post.id)
 
 
-class CommentUpdateMixin(CommentBaseMixin):
-    """Миксин для редактирования комментариев."""
-
-    form_class = CommentForm
-    template_name = 'blog/comment.html'
-
-    def get_success_url(self):
-        return (
-            reverse(
-                'blog:post_detail',
-                kwargs={'post_id': self.object.post.id}
-            ) + f'#comment_{self.object.id}'
-        )
-
-
 class CommentDeleteMixin(CommentBaseMixin):
     """Миксин для удаления комментариев."""
 
@@ -50,3 +35,13 @@ class CommentDeleteMixin(CommentBaseMixin):
             'blog:post_detail',
             kwargs={'post_id': self.object.post.id}
         )
+
+
+class CommentUpdateMixin(CommentDeleteMixin):
+    """Миксин для редактирования комментариев."""
+
+    form_class = CommentForm
+
+    def get_success_url(self):
+        """URL для редактирования с якорем на комментарий."""
+        return super().get_success_url() + f'#comment_{self.object.id}'

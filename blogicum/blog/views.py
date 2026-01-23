@@ -20,8 +20,7 @@ User = get_user_model()
 def index(request):
     """Главная страница."""
     post_list = filter_and_annotate_posts(
-        Post.objects.all(),
-        filter_published=True
+        Post.objects.all()
     )
     page_obj = get_paginated_page(request, post_list, POSTS_PER_PAGE)
     return render(request, 'blog/index.html', {'page_obj': page_obj})
@@ -36,8 +35,7 @@ def category_posts(request, category_slug):
     )
 
     post_list = filter_and_annotate_posts(
-        category.posts.all(),
-        filter_published=True
+        category.posts.all()
     )
 
     page_obj = get_paginated_page(request, post_list, POSTS_PER_PAGE)
@@ -54,11 +52,12 @@ def post_detail(request, post_id):
         id=post_id
     )
 
-    if request.user != post.author:
-        if (not post.is_published
-                or not post.category.is_published
-                or post.pub_date > timezone.now()):
-            raise Http404("Пост не найден")
+    if request.user != post.author and (
+        not post.is_published
+        or not post.category.is_published
+        or post.pub_date > timezone.now()
+    ):
+        raise Http404("Пост не найден")
 
     comments = post.comments.select_related('author').all()
     form = CommentForm() if request.user.is_authenticated else None
@@ -169,13 +168,6 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         context['form'] = PostForm(instance=self.object)
         return context
 
-    def delete(self, request, *args, **kwargs):
-        """Обработка DELETE запроса."""
-        self.object = self.get_object()
-        success_url = self.get_success_url()
-        self.object.delete()
-        return redirect(success_url)
-
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
     """Добавление комментария."""
@@ -201,10 +193,6 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 class CommentUpdateView(CommentUpdateMixin, UpdateView):
     """Редактирование комментария."""
 
-    pass
-
 
 class CommentDeleteView(CommentDeleteMixin, DeleteView):
     """Удаление комментария."""
-
-    pass
