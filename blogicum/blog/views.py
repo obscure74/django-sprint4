@@ -2,7 +2,6 @@
 
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
@@ -11,23 +10,19 @@ from django.views.generic import CreateView, DeleteView, UpdateView
 
 from .constants import POSTS_PER_PAGE
 from .forms import CommentForm, PostForm, RegistrationForm, UserEditForm
+from .mixins import CommentDeleteMixin, CommentUpdateMixin
 from .models import Category, Comment, Post
-from .services import get_paginated_page
+from .services import filter_and_annotate_posts, get_paginated_page
 
 User = get_user_model()
 
 
 def index(request):
     """Главная страница."""
-    post_list = Post.objects.filter(
-        is_published=True,
-        category__is_published=True,
-        pub_date__lte=timezone.now()
-    ).select_related('category', 'location', 'author')
-
-    post_list = post_list.annotate(comment_count=Count('comments'))
-    post_list = post_list.order_by('-pub_date')
-
+    post_list = filter_and_annotate_posts(
+        Post.objects.all(),
+        filter_published=True
+    )
     page_obj = get_paginated_page(request, post_list, POSTS_PER_PAGE)
     return render(request, 'blog/index.html', {'page_obj': page_obj})
 
@@ -40,13 +35,10 @@ def category_posts(request, category_slug):
         is_published=True
     )
 
-    post_list = category.posts.filter(
-        is_published=True,
-        pub_date__lte=timezone.now()
-    ).select_related('category', 'location', 'author')
-
-    post_list = post_list.annotate(comment_count=Count('comments'))
-    post_list = post_list.order_by('-pub_date')
+    post_list = filter_and_annotate_posts(
+        category.posts.all(),
+        filter_published=True
+    )
 
     page_obj = get_paginated_page(request, post_list, POSTS_PER_PAGE)
     return render(request, 'blog/category.html', {
@@ -82,18 +74,10 @@ def profile_view(request, username):
     """Страница пользователя с пагинацией."""
     user = get_object_or_404(User, username=username)
 
-    if request.user == user:
-        post_list = user.posts.all()
-    else:
-        post_list = user.posts.filter(
-            is_published=True,
-            category__is_published=True,
-            pub_date__lte=timezone.now()
-        )
-
-    post_list = post_list.annotate(comment_count=Count('comments'))
-    post_list = post_list.select_related('category', 'location')
-    post_list = post_list.order_by('-pub_date')
+    post_list = filter_and_annotate_posts(
+        user.posts.all(),
+        filter_published=(request.user != user)
+    )
 
     page_obj = get_paginated_page(request, post_list, POSTS_PER_PAGE)
     return render(request, 'blog/profile.html', {
@@ -182,7 +166,15 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['form'] = PostForm(instance=self.object)
         return context
+
+    def delete(self, request, *args, **kwargs):
+        """Обработка DELETE запроса."""
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        self.object.delete()
+        return redirect(success_url)
 
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
@@ -206,49 +198,13 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         )
 
 
-class CommentMixin(LoginRequiredMixin, UserPassesTestMixin):
-    """Миксин для работы с комментариями."""
-
-    model = Comment
-    form_class = CommentForm
-    pk_url_kwarg = 'comment_id'
-
-    def test_func(self):
-        comment = self.get_object()
-        return self.request.user == comment.author
-
-    def handle_no_permission(self):
-        comment = self.get_object()
-        return redirect('blog:post_detail', post_id=comment.post.id)
-
-
-class CommentUpdateView(CommentMixin, UpdateView):
+class CommentUpdateView(CommentUpdateMixin, UpdateView):
     """Редактирование комментария."""
 
-    template_name = 'blog/comment.html'
-
-    def get_success_url(self):
-        return (
-            reverse(
-                'blog:post_detail',
-                kwargs={'post_id': self.object.post.id}
-            ) + f'#comment_{self.object.id}'
-        )
+    pass
 
 
-class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class CommentDeleteView(CommentDeleteMixin, DeleteView):
     """Удаление комментария."""
 
-    model = Comment
-    template_name = 'blog/comment.html'
-    pk_url_kwarg = 'comment_id'
-
-    def test_func(self):
-        comment = self.get_object()
-        return self.request.user == comment.author
-
-    def get_success_url(self):
-        return reverse(
-            'blog:post_detail',
-            kwargs={'post_id': self.object.post.id}
-        )
+    pass
